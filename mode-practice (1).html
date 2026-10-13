@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mode Practice</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --text: #e8eaed;
+    --muted: #9aa0a6;
+    --accent: #8ab4f8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    text-align: center;
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    justify-content: center;
+    margin-bottom: 1.75rem;
+    font-size: 0.9rem;
+  }
+  .filters label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .filters input {
+    width: auto;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+  .mode-name {
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+  }
+  .degrees {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 2.5rem;
+    line-height: 1.4;
+  }
+  button {
+    background: var(--accent);
+    color: #0f1115;
+    border: none;
+    padding: 0.9rem 2.2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.9; }
+  button:active { opacity: 0.8; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="filters" id="filters">
+      <label><input type="checkbox" value="Ionian" checked> Ionian</label>
+      <label><input type="checkbox" value="Dorian" checked> Dorian</label>
+      <label><input type="checkbox" value="Phrygian" checked> Phrygian</label>
+      <label><input type="checkbox" value="Lydian" checked> Lydian</label>
+      <label><input type="checkbox" value="Mixolydian" checked> Mixolydian</label>
+      <label><input type="checkbox" value="Aeolian" checked> Aeolian</label>
+      <label><input type="checkbox" value="Locrian" checked> Locrian</label>
+    </div>
+
+    <div class="mode-name" id="modeName">—</div>
+    <div class="degrees" id="degrees">—</div>
+    <button id="nextBtn">Next</button>
+  </div>
+
+<script>
+const allModes = [
+  { name: "Ionian",     degrees: "1  2  3  4  5  6  7" },
+  { name: "Dorian",     degrees: "1  2  ♭3  4  5  6  ♭7" },
+  { name: "Phrygian",   degrees: "1  ♭2  ♭3  4  5  ♭6  ♭7" },
+  { name: "Lydian",     degrees: "1  2  3  ♯4  5  6  7" },
+  { name: "Mixolydian", degrees: "1  2  3  4  5  6  ♭7" },
+  { name: "Aeolian",    degrees: "1  2  ♭3  4  5  ♭6  ♭7" },
+  { name: "Locrian",    degrees: "1  ♭2  ♭3  4  ♭5  ♭6  ♭7" }
+];
+
+let lastName = "";
+
+function getActiveModes() {
+  const checked = [...document.querySelectorAll('#filters input:checked')].map(cb => cb.value);
+  if (checked.length === 0) return allModes;
+  return allModes.filter(m => checked.includes(m.name));
+}
+
+function showRandomMode() {
+  const pool = getActiveModes();
+  if (pool.length === 0) return;
+
+  let mode;
+  do {
+    mode = pool[Math.floor(Math.random() * pool.length)];
+  } while (mode.name === lastName && pool.length > 1);
+
+  lastName = mode.name;
+  document.getElementById("modeName").textContent = mode.name;
+  document.getElementById("degrees").textContent = mode.degrees;
+}
+
+document.getElementById("nextBtn").addEventListener("click", showRandomMode);
+
+// show first mode on load
+showRandomMode();
+</script>
+</body>
+</html>

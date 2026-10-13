@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interval → Semitones Drill</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card: #1a2332;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --correct: #22c55e;
+      --wrong: #ef4444;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.35rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem 1.75rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .score-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.75rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .score-bar strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .interval-name {
+      font-size: 2.1rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.03em;
+      min-height: 2.6rem;
+    }
+
+    .prompt {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    input[type="number"] {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 1.25rem;
+      color: var(--text);
+      text-align: center;
+      outline: none;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.85rem 1.4rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .feedback {
+      min-height: 3.2rem;
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 500;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .feedback.correct {
+      color: var(--correct);
+    }
+
+    .feedback.wrong {
+      color: var(--wrong);
+    }
+
+    .feedback.neutral {
+      color: var(--muted);
+    }
+
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    .controls button.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .controls button.secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .hint {
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .hint strong {
+      color: var(--text);
+    }
+
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Interval → Semitones</h1>
+      <p class="subtitle">Train the chromatic distances cold</p>
+    </header>
+
+    <div class="card">
+      <div class="score-bar">
+        <span>Score: <strong id="score">0</strong> / <strong id="total">0</strong></span>
+        <span>Streak: <strong id="streak">0</strong></span>
+      </div>
+
+      <div class="interval-name" id="interval">—</div>
+      <p class="prompt">How many semitones?</p>
+
+      <div class="input-row">
+        <input type="number" id="answer" min="0" max="12" placeholder="0–12" autocomplete="off">
+        <button id="checkBtn">Check</button>
+      </div>
+
+      <div class="feedback neutral" id="feedback">Type the number and hit Check (or press Enter)</div>
+
+      <div class="controls">
+        <button id="nextBtn" class="secondary" disabled>Next interval</button>
+        <button id="resetBtn" class="secondary">Reset score</button>
+      </div>
+
+      <div class="hint">
+        <strong>Path to mastery:</strong> Pick a starting pitch (C is fine).  
+        Count every half-step until you land on the target interval.  
+        Do it until the number appears automatically.
+      </div>
+    </div>
+
+    <footer>
+      The twelve chromatic intervals inside one octave
+    </footer>
+  </div>
+
+  <script>
+    const intervals = [
+      { name: "Perfect Unison", semitones: 0 },
+      { name: "Minor Second",   semitones: 1 },
+      { name: "Major Second",   semitones: 2 },
+      { name: "Minor Third",    semitones: 3 },
+      { name: "Major Third",    semitones: 4 },
+      { name: "Perfect Fourth", semitones: 5 },
+      { name: "Tritone",        semitones: 6 },
+      { name: "Perfect Fifth",  semitones: 7 },
+      { name: "Minor Sixth",    semitones: 8 },
+      { name: "Major Sixth",    semitones: 9 },
+      { name: "Minor Seventh",  semitones: 10 },
+      { name: "Major Seventh",  semitones: 11 },
+      { name: "Perfect Octave", semitones: 12 }
+    ];
+
+    let current = null;
+    let score = 0;
+    let total = 0;
+    let streak = 0;
+    let answered = false;
+
+    const intervalEl = document.getElementById("interval");
+    const answerEl  = document.getElementById("answer");
+    const feedbackEl = document.getElementById("feedback");
+    const scoreEl   = document.getElementById("score");
+    const totalEl   = document.getElementById("total");
+    const streakEl  = document.getElementById("streak");
+    const checkBtn  = document.getElementById("checkBtn");
+    const nextBtn   = document.getElementById("nextBtn");
+    const resetBtn  = document.getElementById("resetBtn");
+
+    function pickInterval() {
+      // Avoid immediate repeats
+      let next;
+      do {
+        next = intervals[Math.floor(Math.random() * intervals.length)];
+      } while (current && next.name === current.name && intervals.length > 1);
+      current = next;
+      answered = false;
+
+      intervalEl.textContent = current.name;
+      answerEl.value = "";
+      answerEl.disabled = false;
+      checkBtn.disabled = false;
+      nextBtn.disabled = true;
+      feedbackEl.textContent = "Type the number and hit Check (or press Enter)";
+      feedbackEl.className = "feedback neutral";
+      answerEl.focus();
+    }
+
+    function checkAnswer() {
+      if (answered || !current) return;
+
+      const val = parseInt(answerEl.value, 10);
+      if (isNaN(val) || val < 0 || val > 12) {
+        feedbackEl.textContent = "Enter a whole number between 0 and 12.";
+        feedbackEl.className = "feedback wrong";
+        return;
+      }
+
+      answered = true;
+      total++;
+      totalEl.textContent = total;
+      answerEl.disabled = true;
+      checkBtn.disabled = true;
+      nextBtn.disabled = false;
+
+      if (val === current.semitones) {
+        score++;
+        streak++;
+        scoreEl.textContent = score;
+        streakEl.textContent = streak;
+        feedbackEl.textContent = `Correct — ${current.name} = ${current.semitones} semitones.`;
+        feedbackEl.className = "feedback correct";
+      } else {
+        streak = 0;
+        streakEl.textContent = streak;
+        feedbackEl.textContent = `Not quite. ${current.name} is ${current.semitones} semitones.`;
+        feedbackEl.className = "feedback wrong";
+      }
+    }
+
+    function resetScore() {
+      score = 0;
+      total = 0;
+      streak = 0;
+      scoreEl.textContent = "0";
+      totalEl.textContent = "0";
+      streakEl.textContent = "0";
+      pickInterval();
+    }
+
+    checkBtn.addEventListener("click", checkAnswer);
+    nextBtn.addEventListener("click", pickInterval);
+    resetBtn.addEventListener("click", resetScore);
+
+    answerEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        if (!answered) checkAnswer();
+        else pickInterval();
+      }
+    });
+
+    // Start
+    pickInterval();
+  </script>
+</body>
+</html>

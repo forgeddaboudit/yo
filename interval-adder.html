@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interval Adder Drill</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --text: #e8eaed;
+    --muted: #9aa0a6;
+    --accent: #8ab4f8;
+    --good: #81c995;
+    --bad: #f28b82;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 2.5rem;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    text-align: center;
+  }
+  h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .question {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 1.75rem 0;
+    line-height: 1.3;
+  }
+  input {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    font-size: 1.15rem;
+    border: 2px solid #333;
+    border-radius: 10px;
+    background: #0f1115;
+    color: var(--text);
+    text-align: center;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus { border-color: var(--accent); }
+  .feedback {
+    min-height: 2rem;
+    margin: 1.25rem 0 0.5rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+  .feedback.good { color: var(--good); }
+  .feedback.bad { color: var(--bad); }
+  .correct-answer {
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    min-height: 1.2rem;
+  }
+  button {
+    background: var(--accent);
+    color: #0f1115;
+    border: none;
+    padding: 0.85rem 1.8rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .score {
+    margin-top: 1.75rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .hint {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Interval Adder</h1>
+    <div class="question" id="question">Loading…</div>
+    
+    <input type="text" id="answer" placeholder="e.g. major 2nd or 2nd" autocomplete="off" autofocus>
+    
+    <div class="feedback" id="feedback"></div>
+    <div class="correct-answer" id="correct"></div>
+    
+    <button id="submit">Check</button>
+    
+    <div class="score" id="score">0 correct · 0 total</div>
+    <div class="hint">
+      Always reduces to simple interval (max 11 semitones).<br>
+      Accepts: major 2nd · 2nd · maj2 · b2 · b3 · b5 · b6 · b7 etc.
+    </div>
+  </div>
+
+<script>
+// ---------- Interval data ----------
+const qualities = {
+  perfect: {1:0, 4:5, 5:7, 8:12},
+  major:   {2:2, 3:4, 6:9, 7:11},
+  minor:   {2:1, 3:3, 6:8, 7:10}
+};
+
+// Possible simple intervals we will ask about
+const pool = [
+  {q:"perfect", n:4}, {q:"perfect", n:5},
+  {q:"major", n:2}, {q:"major", n:3}, {q:"major", n:6}, {q:"major", n:7},
+  {q:"minor", n:2}, {q:"minor", n:3}, {q:"minor", n:6}, {q:"minor", n:7}
+];
+
+// ---------- Helpers ----------
+function semitones(q, n) {
+  let nn = n;
+  while (nn > 8) nn -= 7;
+  while (nn < 1) nn += 7;
+
+  if (qualities[q] && qualities[q][nn] !== undefined) {
+    return qualities[q][nn];
+  }
+  return null;
+}
+
+function nameFromSemitones(total) {
+  // Strictly reduce to simple interval (0–11 semitones)
+  let rem = ((total % 12) + 12) % 12;
+
+  const simple = {
+    0:  {q:"perfect", n:1, name:"perfect unison"},
+    1:  {q:"minor",   n:2, name:"minor 2nd"},
+    2:  {q:"major",   n:2, name:"major 2nd"},
+    3:  {q:"minor",   n:3, name:"minor 3rd"},
+    4:  {q:"major",   n:3, name:"major 3rd"},
+    5:  {q:"perfect", n:4, name:"perfect 4th"},
+    6:  {q:"tritone", n:4, name:"tritone"},
+    7:  {q:"perfect", n:5, name:"perfect 5th"},
+    8:  {q:"minor",   n:6, name:"minor 6th"},
+    9:  {q:"major",   n:6, name:"major 6th"},
+    10: {q:"minor",   n:7, name:"minor 7th"},
+    11: {q:"major",   n:7, name:"major 7th"}
+  };
+
+  return simple[rem];
+}
+
+function numberName(n) {
+  if (n === 1) return "unison";
+  if (n === 8) return "octave";
+  const suffixes = {1:"st", 2:"nd", 3:"rd"};
+  const s = (n % 10 in suffixes && ![11,12,13].includes(n % 100)) ? suffixes[n % 10] : "th";
+  return n + s;
+}
+
+// ---------- Quiz state ----------
+let currentA, currentB, currentAnswerObj;
+let correctCount = 0, totalCount = 0;
+
+function newQuestion() {
+  currentA = pool[Math.floor(Math.random() * pool.length)];
+  currentB = pool[Math.floor(Math.random() * pool.length)];
+
+  const s1 = semitones(currentA.q, currentA.n);
+  const s2 = semitones(currentB.q, currentB.n);
+  const total = s1 + s2;
+  currentAnswerObj = nameFromSemitones(total);
+
+  document.getElementById("question").innerHTML =
+    `<span style="color:var(--muted);font-size:0.9em">${currentA.q}</span> ${numberName(currentA.n)}` +
+    ` plus ` +
+    `<span style="color:var(--muted);font-size:0.9em">${currentB.q}</span> ${numberName(currentB.n)}` +
+    ` is what?`;
+
+  document.getElementById("answer").value = "";
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("feedback").className = "feedback";
+  document.getElementById("correct").textContent = "";
+  document.getElementById("answer").focus();
+}
+
+function normalize(str) {
+  return str.toLowerCase()
+    .replace(/maj(or)?/g, "major")
+    .replace(/min(or)?/g, "minor")
+    .replace(/perf(ect)?/g, "perfect")
+    .replace(/aug(mented)?/g, "augmented")
+    .replace(/dim(inished)?/g, "diminished")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function checkAnswer() {
+  const raw = document.getElementById("answer").value;
+  if (!raw.trim()) return;
+
+  totalCount++;
+  const user = normalize(raw);
+  const correctName = currentAnswerObj.name;          // e.g. "major 2nd"
+  const correctDegree = numberName(currentAnswerObj.n); // e.g. "2nd"
+  const n = currentAnswerObj.n;
+  const q = currentAnswerObj.q;
+
+  // Accept:
+  // - full name ("major 2nd", "maj 2nd", "major2nd")
+  // - just the degree ("2nd", "2")
+  // - scale-degree flats (b2, b3, b5, b6, b7)
+  // - common shortcuts
+  let ok = false;
+
+  if (user === normalize(correctName) ||
+      user === normalize(correctName.replace(" ", "")) ||
+      user === correctDegree ||
+      user === String(n) ||
+      user === correctDegree.replace("nd","").replace("rd","").replace("th","").replace("st","")) {
+    ok = true;
+  }
+
+  // Scale-degree flat notation (very common in jazz / functional analysis)
+  // b2 = minor 2nd, b3 = minor 3rd, b5 = tritone/dim5, b6 = minor 6th, b7 = minor 7th
+  if (q === "minor" && n === 2 && (user === "b2" || user === "♭2" || user === "flat2")) ok = true;
+  if (q === "minor" && n === 3 && (user === "b3" || user === "♭3" || user === "flat3")) ok = true;
+  if (q === "minor" && n === 6 && (user === "b6" || user === "♭6" || user === "flat6")) ok = true;
+  if (q === "minor" && n === 7 && (user === "b7" || user === "♭7" || user === "flat7")) ok = true;
+
+  // Tritone / diminished 5th
+  if (q === "tritone" &&
+      (user.includes("tritone") || user.includes("aug4") || user.includes("dim5") ||
+       user === "b5" || user === "♭5" || user === "flat5" ||
+       user === "4th" || user === "4" || user === "#4" || user === "♯4")) {
+    ok = true;
+  }
+
+  // also accept "octave" / "unison" etc.
+  if (n === 1 && (user.includes("unison") || user === "1" || user === "1st")) ok = true;
+  if (n === 8 && (user.includes("octave") || user === "8" || user === "8th")) ok = true;
+
+  const fb = document.getElementById("feedback");
+  const ca = document.getElementById("correct");
+
+  if (ok) {
+    correctCount++;
+    fb.textContent = "✓";
+    fb.className = "feedback good";
+    ca.textContent = "";
+  } else {
+    fb.textContent = "✗";
+    fb.className = "feedback bad";
+    ca.textContent = `Correct: ${correctName}`;
+  }
+
+  document.getElementById("score").textContent =
+    `${correctCount} correct · ${totalCount} total`;
+
+  setTimeout(newQuestion, ok ? 700 : 1600);
+}
+
+// ---------- Events ----------
+document.getElementById("submit").addEventListener("click", checkAnswer);
+document.getElementById("answer").addEventListener("keydown", e => {
+  if (e.key === "Enter") checkAnswer();
+});
+
+// start
+newQuestion();
+</script>
+</body>
+</html>
