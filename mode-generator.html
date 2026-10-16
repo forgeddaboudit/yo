@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Note + Mode Generator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f0f13;
+      color: #e8e8ed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: #8b8b9a;
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .result-card {
+      background: #1a1a22;
+      border: 1px solid #2a2a35;
+      border-radius: 16px;
+      padding: 2.2rem 1.8rem;
+      margin-bottom: 1.8rem;
+      transition: all 0.25s ease;
+    }
+
+    .result-card.flash {
+      border-color: #5b8def;
+      box-shadow: 0 0 0 1px #5b8def33;
+    }
+
+    .note {
+      font-size: 3.4rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #fff;
+      margin-bottom: 0.15rem;
+    }
+
+    .mode {
+      font-size: 1.55rem;
+      font-weight: 500;
+      color: #5b8def;
+      margin-bottom: 1.4rem;
+    }
+
+    .scale-notes {
+      font-size: 0.95rem;
+      color: #a0a0b0;
+      letter-spacing: 0.04em;
+      font-family: ui-monospace, 'Cascadia Code', monospace;
+    }
+
+    .hint {
+      font-size: 0.85rem;
+      color: #6b6b7a;
+      margin-top: 1.1rem;
+      line-height: 1.45;
+    }
+
+    button {
+      background: #5b8def;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 0.95rem 2.2rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    button:hover {
+      background: #4a7de0;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .footer {
+      margin-top: 2.8rem;
+      font-size: 0.8rem;
+      color: #55556a;
+      max-width: 360px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Note + Mode Generator</h1>
+    <p class="subtitle">One of 12 notes × one of 7 modes</p>
+
+    <div class="result-card" id="card">
+      <div class="note" id="note">—</div>
+      <div class="mode" id="mode">Click to generate</div>
+      <div class="scale-notes" id="scale"></div>
+      <div class="hint" id="hint"></div>
+    </div>
+
+    <button onclick="generate()">Generate New Combination</button>
+
+    <p class="footer">
+      Modes are just different starting points on the same major scale.  
+      Treat the mode’s root as home and the color changes.
+    </p>
+  </div>
+
+  <script>
+    const notes = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
+    
+    // Interval patterns in semitones from the root
+    const modes = {
+      'Ionian':     [0, 2, 4, 5, 7, 9, 11], // major
+      'Dorian':     [0, 2, 3, 5, 7, 9, 10],
+      'Phrygian':   [0, 1, 3, 5, 7, 8, 10],
+      'Lydian':     [0, 2, 4, 6, 7, 9, 11],
+      'Mixolydian': [0, 2, 4, 5, 7, 9, 10],
+      'Aeolian':    [0, 2, 3, 5, 7, 8, 10], // natural minor
+      'Locrian':    [0, 1, 3, 5, 6, 8, 10]
+    };
+
+    const modeNames = Object.keys(modes);
+
+    const hints = {
+      'Ionian':     'Bright, stable, the “home” sound of Western music.',
+      'Dorian':     'Minor but hopeful — the raised 6th is the signature.',
+      'Phrygian':   'Dark and Spanish-tinged — the flat 2nd does the work.',
+      'Lydian':     'Dreamy and open — the raised 4th floats above major.',
+      'Mixolydian': 'Major with attitude — the flat 7th gives it that blues/rock edge.',
+      'Aeolian':    'The pure natural minor. Melancholy without the drama of harmonic minor.',
+      'Locrian':    'Unstable and tense — the only mode with a diminished 5th as its “tonic” triad.'
+    };
+
+    function getScaleNotes(root, intervals) {
+      const rootIndex = notes.indexOf(root);
+      return intervals.map(i => notes[(rootIndex + i) % 12]).join('  ·  ');
+    }
+
+    function generate() {
+      const root = notes[Math.floor(Math.random() * notes.length)];
+      const mode = modeNames[Math.floor(Math.random() * modeNames.length)];
+      const intervals = modes[mode];
+
+      document.getElementById('note').textContent = root;
+      document.getElementById('mode').textContent = mode;
+      document.getElementById('scale').textContent = getScaleNotes(root, intervals);
+      document.getElementById('hint').textContent = hints[mode];
+
+      const card = document.getElementById('card');
+      card.classList.remove('flash');
+      void card.offsetWidth; // force reflow
+      card.classList.add('flash');
+    }
+
+    // Generate one on load so it’s never empty
+    generate();
+  </script>
+</body>
+</html>
